@@ -10,22 +10,45 @@
 //  *********************************
 //  **       Connections etc.      **
 //  *********************************
-//  |-------------|-------------|------------|------------|------------|
-//  |   Lilygo    |   Lilygo    |   Si4735   |  Encoder   |   Audio    |
-//  | T-Display S3|  T-Embeded  |            |            | Amplifier  |        
-//  |-------------|-------------|------------|------------|------------|        
-//  |     3V3     |     3V3     |    Vcc     |            |    Vcc     |        
-//  |     GND     |     GND     |    GND     |     2,4    |    GND     |        Encoder        1,2,3        
-//  |     16      |             |            |     5      |            |        Encoder switch 4,5
-//  |      3      |      3      |   Reset    |            |            |
-//  |     43      |     43      |    SDA     |            |            |
-//  |     44      |     44      |    SCL     |            |            |
-//  |      1      |             |            |      1     |            |
-//  |      2      |             |            |      3     |            |
-//  |             |             |    LOut    |            |    LIn     |
-//  |             |             |    ROut    |            |    RIn     |
-//  |     21 Mute |     21 Mute |            |            |    Mute    |
-//  |-------------|-------------|------------|------------|------------|
+//
+//  Lilygo T-Display S3
+//
+//  |--------------|------------|------------|------------|
+//  |   Lilygo     |   Si4735   |  Encoder   |   Audio    |
+//  | T-Display S3 |            |            | Amplifier  |        
+//  |--------------|------------|------------|------------|        
+//  |     3V3      |    Vcc     |            |    Vcc     |        
+//  |     GND      |    GND     |     2,4    |    GND     |        Encoder        1,2,3        
+//  |     21       |            |     5      |            |        Encoder switch 4,5
+//  |     16       |   Reset    |            |            |
+//  |     43       |    SDA     |            |            |
+//  |     44       |    SCL     |            |            |
+//  |      1       |            |      1     |            |
+//  |      2       |            |      3     |            |
+//  |              |    LOut    |            |    LIn     |
+//  |              |    ROut    |            |    RIn     |
+//  |     17 Mute  |            |            |    Mute    |
+//  |--------------|------------|------------|------------|
+//
+//
+//  Lilygo T-Embed
+//
+//  |--------------|------------|------------|
+//  |    Lilygo    |   Si4735   |   Audio    |
+//  |   T-Embeded  |            | Amplifier  |
+//  |--------------|------------|------------|
+//  |     3V3      |    Vcc     |    Vcc     |
+//  |     GND      |    GND     |    GND     |
+//  |              |            |            |
+//  |     16       |   Reset    |            |
+//  |     18       |    SDA     |            |
+//  |      8       |    SCL     |            |
+//  |              |            |            |
+//  |              |            |            |
+//  |              |    LOut    |    LIn     |
+//  |              |    ROut    |    RIn     |
+//  |     17 Mute  |            |    Mute    |
+//  |--------------|------------|------------|
 //
 
 #define I_use_T_Display_S3     // Comment this line if you use a Lilygo T-Embed 
@@ -47,19 +70,24 @@ TFT_eSprite spr = TFT_eSprite(&tft);
 #define PIN_IN1          2
 #define PIN_IN2          1
 
-#define I2C_SDA         43
-#define I2C_SCL         44
-
 #ifdef I_use_T_Display_S3
-#define BUTTON01        16
+#define BUTTON01        21
 #else
 #define BUTTON01         0
 #endif
 
+#ifdef I_use_T_Display_S3
+#define I2C_SDA         43
+#define I2C_SCL         44
+#else
+#define I2C_SDA         18
+#define I2C_SCL         8
+#endif
 
-#define RESET_PIN        3
+#define RESET_PIN       16
+#define AUDIO_MUTE      17
+
 #define currentVOL      45
-#define AUDIO_MUTE      21
 #define FM_FUNCTION      0
 uint8_t currentMode = FM_FUNCTION;
 uint16_t minimumFMFreq =  7600; // Minimum frequency of the band

@@ -1,8 +1,8 @@
-# VoloR's RadioEmbed sketch ported to the Si473x.
+# TEmbedFMRadio sketch from Volos Projects ported to the Si473x.
 
 This Si473x Radio uses the amazing library written by [PU2CLR (Ricardo Caratti)](https://github.com/pu2clr/SI4735). It is based on sketch from [Volos Projects](https://github.com/VolosR/TEmbedFMRadio). [Volos Projects](https://www.youtube.com/@VolosProjects) YouTube channel has a lot of tips and tricks for Lilygo T-Embed and Lilygo T-Display. I recommend this YouTube channel if you want to know more about this device and also about the tft_espi library, especially how to use sprites.
 
-I am using a [Lilygo T-Display S3](https://github.com/Xinyuan-LilyGO/T-Display-S3), which is an ESP32S3 board with a 1.9 inch display, but I believe it will also run on [Lilygo T-Embed](https://github.com/Xinyuan-LilyGO/T-Embed) by commentting out the line "#define I_use_T_Display_S3.
+I am using a [Lilygo T-Display S3](https://github.com/Xinyuan-LilyGO/T-Display-S3), which is an ESP32S3 board with a 1.9 inch display with a 8-Bit Parallel Interface, but I believe it will also run on [Lilygo T-Embed](https://github.com/Xinyuan-LilyGO/T-Embed) by commentting out the line "#define I_use_T_Display_S3.
 
 If you want just to look and feel the interface, it's also possible to run this sketch without Si473x. To do this, uncomment de line "#define SI4735_EMUL"
 
@@ -43,20 +43,20 @@ First release. For now, FM only. On reset, all settings will return to default.
 # Schematics:
 
 * Si4735
-<Not avaliable yet>
+Not avaliable yet
 
 * Si4732
-<Not avaliable yet>
+Not avaliable yet
 
 # Videos:
 
-* <Not avaliable yet>
+* Not avaliable yet
 
 # Pictures:
 
 ## Version V1
 
-* <Not avaliable yet>
+* Not avaliable yet
 
 # References
 

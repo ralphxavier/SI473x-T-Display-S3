@@ -19,7 +19,12 @@ It is extremely important to follow all the steps indicated on Lilygo github:
 
 # Releases
 
-## [V1 - Initial Release]
+## [V0.2 - RDS Feature added]
+
+ - RDS Feature added
+ - Performance improvements
+
+## [V0.1 - Initial Release]
 
 First release. For now, FM only. On reset, all settings will return to default.
 

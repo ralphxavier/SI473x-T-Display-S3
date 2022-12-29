@@ -55,11 +55,11 @@ Not avaliable yet
 
 # Videos:
 
-* Not avaliable yet
+* https://youtu.be/G1P8UwrIhlU
 
 # Pictures:
 
-## Version V1
+## Version V0.1
 
 * Not avaliable yet
 

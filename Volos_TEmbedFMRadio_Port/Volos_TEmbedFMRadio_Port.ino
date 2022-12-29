@@ -1,3 +1,18 @@
+//  *********************************
+//  **        Release Notes        **
+//  *********************************
+//
+//  V0.2 - Dec/29/2022
+//     - Added RDS Function
+//     - Performance improvements
+//
+//  V0.1 - Dec/27/2022
+//     - Initial Release without RDS and save configs
+//
+//  *********************************
+//  **          Libraries          **
+//  *********************************
+//
 //  Library TFT_eSPI you MUST download from here :
 //        For Lilygo T-Display-S3: https://github.com/Xinyuan-LilyGO/T-Display-S3 (See "lib" directory)
 //        For Lilygo T-Embed: https://github.com/Xinyuan-LilyGO/T-Embed (See "lib" directory)
@@ -87,6 +102,8 @@ TFT_eSprite spr = TFT_eSprite(&tft);
 #define RESET_PIN       16
 #define AUDIO_MUTE      17
 
+#define STRENGTH_CHECK_TIME 1500
+#define RDS_CHECK_TIME 90
 #define currentVOL      45
 #define FM_FUNCTION      0
 uint8_t currentMode = FM_FUNCTION;
@@ -112,11 +129,20 @@ int strength=0;
 bool stereoPilot=0;
 bool newStereoPilot=0;
 uint8_t rssi=0;
+uint8_t snr=0;
 int newStrength=10;
-int getSignalLevel=0;
-uint16_t sta[6]={8570,8990,9250,9170,10370,10250};
+long lastStrengthCheck = millis();
+long lastRDSCheck = millis();
+uint16_t sta[6]={9850,10030,9250,9170,10370,10250};
 const int lastStationMenu = (sizeof sta/sizeof (sta[0])) - 1;
 int selectedStation = 0;
+
+char *rdsMsg;
+char *stationName;
+char *rdsTime;
+char bufferStationName[50];
+char bufferRdsMsg[100];
+char bufferRdsTime[32];
 
 float freq=currentFMFreq;
 
@@ -136,8 +162,6 @@ uint8_t currentVolStep = 1;
 
 // save the millis when a press has started.
 unsigned long pressStartTime;
-
-int  deb         =  0;
 
 void IRAM_ATTR checkTicks() {
   // include all buttons here to be checked
@@ -159,6 +183,7 @@ void singleClick() {
     #else
     si4735.setFrequency(sta[selectedStation]);
     freq=si4735.getFrequency();
+    cleanBfoRdsInfo();
     #endif
     stationsMenu=!stationsMenu;
   } 
@@ -266,7 +291,10 @@ void setup() {
   si4735.setup(RESET_PIN, FM_FUNCTION);
   si4735.setFM(minimumFMFreq, maximumFMFreq, currentFMFreq, currentFMStep);
   delay(500);
+  si4735.setFMDeEmphasis(1);
   si4735.setVolume(currentVOL);
+  si4735.RdsInit();
+  si4735.setRdsConfig(1, 2, 2, 2, 2);
   #endif
 
   spr.createSprite(320,170);
@@ -301,13 +329,15 @@ void readEncoder() {
         #ifndef SI4735_EMUL
         if (!muted) si4735.setVolume(volLevel);
         #endif
-      }
-      else if (stationsMenu or setStationsMenu) {
+      } else if (stationsMenu or setStationsMenu) {
         selectedStation=selectedStation-1;
         if (selectedStation < 0) selectedStation=0;
       } else {
         #ifndef SI4735_EMUL
-        if (si4735.getCurrentFrequency() < maximumFMFreq) si4735.frequencyUp();
+        if (si4735.getCurrentFrequency() < maximumFMFreq) {
+          si4735.frequencyUp();
+          cleanBfoRdsInfo();
+        }
         #else
         freq=freq+currentFMStep;
         if (freq>maximumFMFreq) freq=maximumFMFreq;
@@ -321,14 +351,16 @@ void readEncoder() {
         #ifndef SI4735_EMUL        
         if (!muted) si4735.setVolume(volLevel);
         #endif
-        
       }
       else if (stationsMenu or setStationsMenu) {
         selectedStation=selectedStation+1;
         if (selectedStation > lastStationMenu) selectedStation=lastStationMenu;
       } else {
         #ifndef SI4735_EMUL
-        if (si4735.getCurrentFrequency() > minimumFMFreq) si4735.frequencyDown();
+        if (si4735.getCurrentFrequency() > minimumFMFreq) {
+          si4735.frequencyDown();
+          cleanBfoRdsInfo();
+        } 
         #else
         freq=freq-currentFMStep;
         if (freq<minimumFMFreq) freq=minimumFMFreq;
@@ -340,12 +372,12 @@ void readEncoder() {
 
     drawSprite();
   } 
-  if ( getSignalLevel > 500000) {
-    getSignalLevel=0;
 
+  if ((millis() - lastStrengthCheck) > STRENGTH_CHECK_TIME) {
     #ifndef SI4735_EMUL
     si4735.getCurrentReceivedSignalQuality();
     rssi=si4735.getCurrentRSSI();
+    snr= si4735.getCurrentSNR();
     #else
     rssi=random(11,64);
     #endif
@@ -394,9 +426,14 @@ void readEncoder() {
       stereoPilot = newStereoPilot;
       drawSprite();
     }
-  } else
-    getSignalLevel=getSignalLevel+1;
- 
+    lastStrengthCheck = millis();
+  }
+
+  if ((millis() - lastRDSCheck) > RDS_CHECK_TIME) {
+    if ((currentMode == FM_FUNCTION) and (snr >= 12)) checkRDS();
+    lastRDSCheck = millis();
+  }  
+  
 }
 
 void drawSprite()
@@ -408,7 +445,7 @@ void drawSprite()
   spr.setTextColor(TFT_WHITE,TFT_BLACK);
   
   if (!volAdj) {
-    spr.drawFloat(freq/100.00,1,160,64,7);
+    spr.drawFloat(freq/100.00,1,160,60,7);
   } else {
     spr.drawString("VOL:",100,74,2);
     spr.drawString(String(volLevel),160,64,7);
@@ -454,7 +491,7 @@ void drawSprite()
       spr.fillRect(244+(i*4),80-(i*1),2,4+(i*1),TFT_RED);
   
   
-  spr.fillTriangle(156,104,160,114,164,104,TFT_RED);
+  spr.fillTriangle(156,112,160,122,164,112,TFT_RED);
   
     
   int temp=(freq/10.00)-20;
@@ -490,8 +527,58 @@ void drawSprite()
   #endif
   
   spr.drawLine(160,114,160,170,TFT_RED);
+
+  // spr.setTextColor(TFT_MAGENTA,TFT_BLACK);
+  spr.drawString(bufferStationName,160,102,4);
+  // spr.setTextColor(TFT_WHITE,TFT_BLACK);
+
   spr.pushSprite(0,0);
  
+}
+
+void cleanBfoRdsInfo()
+{
+  bufferStationName[0]='\0';
+}
+
+void showRDSMsg()
+{
+  rdsMsg[35] = bufferRdsMsg[35] = '\0';
+  if (strcmp(bufferRdsMsg, rdsMsg) == 0)
+    return;
+}
+
+void showRDSStation()
+{
+  if (strcmp(bufferStationName, stationName) == 0 ) return;
+  cleanBfoRdsInfo();
+  strcpy(bufferStationName, stationName);
+  drawSprite();
+}
+
+void showRDSTime()
+{
+
+  if (strcmp(bufferRdsTime, rdsTime) == 0)
+    return;
+}
+
+void checkRDS()
+{
+  si4735.getRdsStatus();
+  if (si4735.getRdsReceived())
+  {
+    if (si4735.getRdsSync() && si4735.getRdsSyncFound())
+    {
+      rdsMsg = si4735.getRdsText2A();
+      stationName = si4735.getRdsText0A();
+      rdsTime = si4735.getRdsTime();
+      // if ( rdsMsg != NULL )   showRDSMsg();
+      if (stationName != NULL)         
+          showRDSStation();
+      // if ( rdsTime != NULL ) showRDSTime();
+    }
+  }
 }
 
 void loop() { 

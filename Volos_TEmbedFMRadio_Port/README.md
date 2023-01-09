@@ -51,7 +51,7 @@ First release. For now, FM only. On reset, all settings will return to default.
 Not avaliable yet
 
 * Si4732
-Not avaliable yet
+![Si4732](../extras/schematics/schematic_lilygo_tdisplay_s3_Si4732.png)
 
 # Videos:
 
